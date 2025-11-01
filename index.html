@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タスク管理アプリ</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- htmx -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+  
+  <!-- Custom Styles -->
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    
+    .task-card {
+      transition: box-shadow 0.3s ease;
+    }
+    
+    .task-card:hover {
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    
+    .header-section {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 0.5rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    @media (max-width: 768px) {
+      .header-section {
+        padding: 1.5rem;
+      }
+      
+      .header-section h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <!-- Header Section -->
+    <header class="header-section mb-4">
+      <h1 class="display-4 mb-2">タスク管理アプリ</h1>
+      <p class="lead mb-0">タスクを入力してカレンダーに転記します</p>
+    </header>
+    
+    <!-- Form Section Container -->
+    <main>
+      <div id="form-container" x-data="taskApp()">
+        <!-- Task Input Form -->
+        <form id="task-form" class="mb-4">
+          <!-- Task Rows (Dynamic) -->
+          <template x-for="(task, index) in tasks" :key="index">
+            <div class="card mb-3 task-card shadow-sm">
+              <div class="card-body">
+                <div class="row g-3">
+                  <!-- Task Name Field -->
+                  <div class="col-12 col-md-4">
+                    <label :for="'taskName-' + index" class="form-label fw-semibold">
+                      <i class="bi bi-check-circle"></i> タスク名 <span class="text-danger">*</span>
+                    </label>
+                    <input 
+                      type="text" 
+                      class="form-control form-control-lg" 
+                      :id="'taskName-' + index"
+                      :name="'taskName[]'"
+                      x-model="task.name"
+                      placeholder="例: プロジェクト資料作成">
+                    <small class="form-text text-muted">※ 子タスクは「>」で開始</small>
+                  </div>
+                  
+                  <!-- Due Date Field -->
+                  <div class="col-12 col-sm-6 col-md-3">
+                    <label :for="'dueDate-' + index" class="form-label fw-semibold">
+                      <i class="bi bi-calendar"></i> 期限
+                    </label>
+                    <input 
+                      type="date" 
+                      class="form-control form-control-lg" 
+                      :id="'dueDate-' + index"
+                      :name="'dueDate[]'"
+                      x-model="task.dueDate"
+                      placeholder="期限日を選択">
+                  </div>
+                  
+                  <!-- Task Detail Field -->
+                  <div class="col-12 col-md-4">
+                    <label :for="'taskDetail-' + index" class="form-label fw-semibold">
+                      <i class="bi bi-file-text"></i> タスク詳細
+                    </label>
+                    <textarea 
+                      class="form-control" 
+                      :id="'taskDetail-' + index"
+                      :name="'taskDetail[]'"
+                      x-model="task.detail"
+                      rows="3"
+                      placeholder="詳細情報を入力（最大3,500文字）"></textarea>
+                  </div>
+                  
+                  <!-- Delete Button -->
+                  <div class="col-12 col-sm-6 col-md-1 d-flex align-items-end">
+                    <button 
+                      type="button" 
+                      class="btn btn-danger w-100"
+                      @click="removeTask(index)"
+                      :disabled="tasks.length === 1"
+                      title="このタスクを削除">
+                      <span class="d-none d-md-inline">削除</span>
+                      <span class="d-md-none">🗑️ 削除</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+          
+          <!-- Add Task Row Button -->
+          <div class="mb-4">
+            <button 
+              type="button" 
+              class="btn btn-outline-secondary btn-lg"
+              @click="addTask()">
+              <span class="fs-5">+</span> 行を追加
+            </button>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="d-grid gap-2 d-md-flex justify-content-md-start mb-4">
+            <button 
+              type="button" 
+              class="btn btn-primary btn-lg px-5"
+              @click="submitTasks()"
+              :disabled="loading">
+              <span x-show="!loading">🚀 処理開始！</span>
+              <span x-show="loading">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                処理中...
+              </span>
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary btn-lg px-4"
+              @click="clearTasks()"
+              :disabled="loading">
+              🗑️ リストをクリア
+            </button>
+          </div>
+          
+          <!-- Loading Indicator -->
+          <div x-show="loading" class="text-center mb-4 p-4 bg-light rounded">
+            <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+              <span class="visually-hidden">処理中...</span>
+            </div>
+            <p class="mt-2 mb-0 fw-semibold">処理中です。しばらくお待ちください...</p>
+          </div>
+          
+          <!-- Message Display -->
+          <div x-show="message" 
+               x-transition
+               :class="messageClass"
+               class="alert alert-dismissible fade show shadow-sm" 
+               role="alert">
+            <strong x-show="messageClass.includes('success')">✅ 成功！</strong>
+            <strong x-show="messageClass.includes('danger')">❌ エラー</strong>
+            <span x-text="message"></span>
+            <button type="button" class="btn-close" @click="message = ''" aria-label="閉じる"></button>
+          </div>
+        </form>
+      </div>
+    </main>
+    
+    <!-- Alpine.js Data Store Script -->
+    <script>
+      function taskApp() {
+        return {
+          tasks: [
+            { name: '', dueDate: '', detail: '' }
+          ],
+          loading: false,
+          message: '',
+          messageClass: '',
+          
+          addTask() {
+            this.tasks.push({ name: '', dueDate: '', detail: '' });
+          },
+          
+          removeTask(index) {
+            if (this.tasks.length > 1) {
+              this.tasks.splice(index, 1);
+            }
+          },
+          
+          clearTasks() {
+            this.tasks = [{ name: '', dueDate: '', detail: '' }];
+            this.message = '';
+          },
+          
+          async submitTasks() {
+            // Set loading state
+            this.loading = true;
+            this.message = '';
+            
+            try {
+              // Serialize form data
+              const taskData = this.tasks.map(task => ({
+                name: task.name || '',
+                dueDate: task.dueDate || '',
+                detail: task.detail || ''
+              }));
+              
+              // Send POST request using fetch
+              const response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ tasks: taskData })
+              });
+              
+              const result = await response.json();
+              
+              // Display result message
+              if (result.success) {
+                this.messageClass = 'alert-success';
+                this.message = result.message;
+                
+                // Clear tasks on success
+                this.clearTasks();
+              } else {
+                this.messageClass = 'alert-danger';
+                this.message = result.message;
+              }
+              
+              // Auto-hide message after 2 seconds
+              setTimeout(() => {
+                this.message = '';
+              }, 2000);
+              
+            } catch (error) {
+              this.messageClass = 'alert-danger';
+              this.message = `エラーが発生しました: ${error.message}`;
+              
+              // Auto-hide error message after 2 seconds
+              setTimeout(() => {
+                this.message = '';
+              }, 2000);
+            } finally {
+              this.loading = false;
+            }
+          }
+        }
+      }
+    </script>
+  </div>
+  
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
