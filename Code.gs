@@ -25,15 +25,21 @@ function doGet(e) {
  */
 function doPost(e) {
   try {
+    // デバッグ用ログ
+    Logger.log('doPost called');
+    Logger.log('e object: ' + JSON.stringify(e));
+    
     // POSTデータをパース
     let taskData;
     
-    if (e.postData && e.postData.contents) {
+    if (e && e.postData && e.postData.contents) {
       // JSON形式のデータをパース
+      Logger.log('POST data contents: ' + e.postData.contents);
       const requestData = JSON.parse(e.postData.contents);
       taskData = requestData.tasks || [];
     } else {
       // データが存在しない場合は空配列
+      Logger.log('No POST data found');
       taskData = [];
     }
     

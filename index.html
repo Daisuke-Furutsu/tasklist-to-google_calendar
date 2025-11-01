@@ -206,58 +206,49 @@
             this.message = '';
           },
           
-          async submitTasks() {
+          submitTasks() {
             // Set loading state
             this.loading = true;
             this.message = '';
             
-            try {
-              // Serialize form data
-              const taskData = this.tasks.map(task => ({
-                name: task.name || '',
-                dueDate: task.dueDate || '',
-                detail: task.detail || ''
-              }));
-              
-              // Send POST request using fetch
-              const response = await fetch(window.location.href, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ tasks: taskData })
-              });
-              
-              const result = await response.json();
-              
-              // Display result message
-              if (result.success) {
-                this.messageClass = 'alert-success';
-                this.message = result.message;
+            // Serialize form data
+            const taskData = this.tasks.map(task => ({
+              name: task.name || '',
+              dueDate: task.dueDate || '',
+              detail: task.detail || ''
+            }));
+            
+            // Use google.script.run to call server-side function
+            google.script.run
+              .withSuccessHandler((result) => {
+                console.log('Success result:', result);
                 
-                // Clear tasks on success
-                this.clearTasks();
-              } else {
+                // Display result message
+                if (result.success) {
+                  this.messageClass = 'alert-success';
+                  this.message = result.message;
+                  
+                  // Clear tasks on success
+                  this.clearTasks();
+                  
+                  // Auto-hide success message after 3 seconds
+                  setTimeout(() => {
+                    this.message = '';
+                  }, 3000);
+                } else {
+                  this.messageClass = 'alert-danger';
+                  this.message = result.message;
+                }
+                
+                this.loading = false;
+              })
+              .withFailureHandler((error) => {
+                console.error('Failure error:', error);
                 this.messageClass = 'alert-danger';
-                this.message = result.message;
-              }
-              
-              // Auto-hide message after 2 seconds
-              setTimeout(() => {
-                this.message = '';
-              }, 2000);
-              
-            } catch (error) {
-              this.messageClass = 'alert-danger';
-              this.message = `エラーが発生しました: ${error.message}`;
-              
-              // Auto-hide error message after 2 seconds
-              setTimeout(() => {
-                this.message = '';
-              }, 2000);
-            } finally {
-              this.loading = false;
-            }
+                this.message = `エラーが発生しました: ${error.message}`;
+                this.loading = false;
+              })
+              .processTaskList(taskData);
           }
         }
       }

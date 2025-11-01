@@ -57,6 +57,7 @@ clasp deploy
 ## 使い方
 
 1. デプロイされたWebアプリのURLにアクセス
+   - **WebアプリURL**: https://script.google.com/macros/s/AKfycbxuk3KLKaMxizUDiUjwCo6gM4Ps-JMedSGmihBJtyWOgwYyM5ScuvvzMEk3i9qzO_PR1w/exec
 2. タスク名、期限、詳細を入力
 3. 「処理開始！」ボタンをクリック
 4. Google Calendarとドライブに自動的に転記されます
