@@ -18,6 +18,18 @@
 - **Task Detail**: タスクの詳細情報（最大3,500文字）
 - **Web UI**: HTML/CSS/JavaScriptで構築されたユーザーインターフェース
 - **PropertiesService**: GASが提供するキー・バリュー型のストレージサービス
+- **JST (Japan Standard Time)**: 日本標準時間（Asia/Tokyo タイムゾーン）
+- **Today**: 本日の日付（JST基準）
+
+## システム全体の制約
+
+### 制約1: タイムゾーン
+
+THE System SHALL 日本標準時間（JST / Asia/Tokyo）を使用する
+
+- すべての日付・時刻計算はJSTを基準とする
+- `appsscript.json`の`timeZone`設定は`"Asia/Tokyo"`とする
+- 「本日」「今日」などの表現はすべてJST基準とする
 
 ## Requirements
 

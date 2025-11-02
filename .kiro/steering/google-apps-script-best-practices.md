@@ -51,7 +51,7 @@ Google Calendar、Drive、Docsなどを使用する場合は、`appsscript.json`
 
 ```json
 {
-  "timeZone": "America/New_York",
+  "timeZone": "Asia/Tokyo",
   "dependencies": {},
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
@@ -63,6 +63,21 @@ Google Calendar、Drive、Docsなどを使用する場合は、`appsscript.json`
   ]
 }
 ```
+
+### タイムゾーン設定
+
+**重要**: 特に指定がない限り、日本のアプリケーションでは`timeZone`を`"Asia/Tokyo"`に設定してください。デフォルトの`"America/New_York"`のままだと、日付計算が13-14時間ずれてしまいます。
+
+```json
+{
+  "timeZone": "Asia/Tokyo"  // 日本標準時間（JST）
+}
+```
+
+タイムゾーンが正しく設定されていないと：
+- 「本日」の日付が前日になる
+- カレンダーイベントの日付がずれる
+- 期限計算が正しく動作しない
 
 ## デプロイ設定のチェックリスト
 

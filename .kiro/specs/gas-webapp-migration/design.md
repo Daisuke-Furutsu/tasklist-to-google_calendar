@@ -19,6 +19,11 @@
 - **状態管理**: Alpine.js (CDN)
 - **データ永続化**: PropertiesService
 - **外部サービス**: Google Calendar API, Google Drive API, Google Docs API
+- **タイムゾーン**: 日本標準時間（JST / Asia/Tokyo）
+
+### 重要な設計原則
+
+**タイムゾーン**: すべての日付・時刻処理は日本標準時間（JST / Asia/Tokyo）を基準とします。`appsscript.json`の`timeZone`設定は必ず`"Asia/Tokyo"`とし、JavaScriptの`new Date()`で取得される日付はすべてJST基準となります。
 
 ## Architecture
 
@@ -634,6 +639,24 @@ function testCalculateEventDates() {
    ```
 
 ### 設定項目
+
+**appsscript.json:**
+```json
+{
+  "timeZone": "Asia/Tokyo",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/script.external_request"
+  ]
+}
+```
+
+**重要**: `timeZone`は必ず`"Asia/Tokyo"`に設定してください。これにより、すべての日付計算が日本標準時間で行われます。
 
 **Code.gs内の設定:**
 ```javascript
